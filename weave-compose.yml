@@ -17,7 +17,7 @@ configs:
 
 services:
   dockerd-exporter:
-    image: stefanprodan/caddy
+    image: cameronkollwitz/caddy
     networks:
       - net
     environment:
@@ -43,7 +43,7 @@ services:
       mode: global
 
   grafana:
-    image: stefanprodan/swarmprom-grafana:4.6.3
+    image: cameronkollwitz/swarmprom-grafana:4.6.3
     networks:
       - net
     environment:
@@ -67,7 +67,7 @@ services:
           - node.role == manager
 
   node-exporter:
-    image: stefanprodan/swarmprom-node-exporter:v0.15.2
+    image: cameronkollwitz/swarmprom-node-exporter:v0.15.2
     networks:
       - net
     environment:
@@ -90,7 +90,7 @@ services:
       mode: global
 
   caddy:
-    image: stefanprodan/caddy
+    image: cameronkollwitz/caddy
     ports:
       - "3000:3000"
       - "9090:9090"
@@ -110,7 +110,7 @@ services:
           - node.role == manager
 
   prometheus:
-    image: stefanprodan/swarmprom-prometheus:v2.2.0-rc.0
+    image: cameronkollwitz/swarmprom-prometheus:v2.2.0-rc.0
     networks:
       - net
     environment:

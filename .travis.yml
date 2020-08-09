@@ -11,22 +11,22 @@ before_install:
   - sudo service docker restart
 
 script:
-  - cd prometheus && docker build -t stefanprodan/swarmprom-prometheus:$TRAVIS_BUILD_NUMBER .
-  - cd .. && cd node-exporter && docker build -t stefanprodan/swarmprom-node-exporter:$TRAVIS_BUILD_NUMBER .
-  - cd .. && cd alertmanager && docker build -t stefanprodan/swarmprom-alertmanager:$TRAVIS_BUILD_NUMBER .
-  - cd .. && cd grafana && docker build -t stefanprodan/swarmprom-grafana:$TRAVIS_BUILD_NUMBER .
+  - cd prometheus && docker build -t cameronkollwitz/swarmprom-prometheus:$TRAVIS_BUILD_NUMBER .
+  - cd .. && cd node-exporter && docker build -t cameronkollwitz/swarmprom-node-exporter:$TRAVIS_BUILD_NUMBER .
+  - cd .. && cd alertmanager && docker build -t cameronkollwitz/swarmprom-alertmanager:$TRAVIS_BUILD_NUMBER .
+  - cd .. && cd grafana && docker build -t cameronkollwitz/swarmprom-grafana:$TRAVIS_BUILD_NUMBER .
 
 after_success:
   - if [ -z "$DOCKER_USER" ]; then
       echo "PR build, skipping Docker Hub push";
     else
     docker login -u "$DOCKER_USER" -p "$DOCKER_PASS";
-    docker tag stefanprodan/swarmprom-prometheus:$TRAVIS_BUILD_NUMBER stefanprodan/swarmprom-prometheus:v2.5.0;
-    docker push stefanprodan/swarmprom-prometheus:v2.5.0;
-    docker tag stefanprodan/swarmprom-node-exporter:$TRAVIS_BUILD_NUMBER stefanprodan/swarmprom-node-exporter:v0.16.0;
-    docker push stefanprodan/swarmprom-node-exporter:v0.16.0;
-    docker tag stefanprodan/swarmprom-alertmanager:$TRAVIS_BUILD_NUMBER stefanprodan/swarmprom-alertmanager:v0.15.3;
-    docker push stefanprodan/swarmprom-alertmanager:v0.15.3;
-    docker tag stefanprodan/swarmprom-grafana:$TRAVIS_BUILD_NUMBER stefanprodan/swarmprom-grafana:5.3.4;
-    docker push stefanprodan/swarmprom-grafana:5.3.4;
+    docker tag cameronkollwitz/swarmprom-prometheus:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-prometheus:v2.5.0;
+    docker push cameronkollwitz/swarmprom-prometheus:v2.5.0;
+    docker tag cameronkollwitz/swarmprom-node-exporter:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-node-exporter:v0.16.0;
+    docker push cameronkollwitz/swarmprom-node-exporter:v0.16.0;
+    docker tag cameronkollwitz/swarmprom-alertmanager:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-alertmanager:v0.15.3;
+    docker push cameronkollwitz/swarmprom-alertmanager:v0.15.3;
+    docker tag cameronkollwitz/swarmprom-grafana:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-grafana:5.3.4;
+    docker push cameronkollwitz/swarmprom-grafana:5.3.4;
     fi

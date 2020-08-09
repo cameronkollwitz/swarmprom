@@ -12,7 +12,7 @@ and [Unsee](https://github.com/cloudflare/unsee).
 Clone this repository and run the monitoring stack:
 
 ```bash
-$ git clone https://github.com/stefanprodan/swarmprom.git
+$ git clone https://github.com/cameronkollwitz/swarmprom.git
 $ cd swarmprom
 
 ADMIN_USER=admin \
@@ -40,7 +40,6 @@ Services:
 * unsee (alert manager dashboard) `http://<swarm-ip>:9094`
 * caddy (reverse proxy and basic auth provider for prometheus, alertmanager and unsee)
 
-
 ## Alternative install with Traefik and HTTPS
 
 If you have a Docker Swarm cluster with a global Traefik set up as described in [DockerSwarm.rocks](https://dockerswarm.rocks), you can deploy Swarmprom integrated with that global Traefik proxy.
@@ -60,8 +59,8 @@ These instructions assume you already have Traefik set up following that guide a
 * Clone this repository and enter into the directory:
 
 ```bash
-$ git clone https://github.com/stefanprodan/swarmprom.git
-$ cd swarmprom
+git clone https://github.com/cameronkollwitz/swarmprom.git
+cd swarmprom
 ```
 
 * Set and export an `ADMIN_USER` environment variable:
@@ -71,7 +70,6 @@ export ADMIN_USER=admin
 ```
 
 * Set and export an `ADMIN_PASSWORD` environment variable:
-
 
 ```bash
 export ADMIN_PASSWORD=changethis
@@ -91,26 +89,26 @@ echo $HASHED_PASSWORD
 
 it will look like:
 
-```
+```bash
 $apr1$89eqM5Ro$CxaFELthUKV21DpI3UTQO.
 ```
 
 * Create and export an environment variable `DOMAIN`, e.g.:
 
 ```bash
-export DOMAIN=example.com
+export DOMAIN=cameronkollwitz.com
 ```
 
 and make sure that the following sub-domains point to your Docker Swarm cluster IPs:
 
-* `grafana.example.com`
-* `alertmanager.example.com`
-* `unsee.example.com`
-* `prometheus.example.com`
+* `grafana.cameronkollwitz.com`
+* `alertmanager.cameronkollwitz.com`
+* `unsee.cameronkollwitz.com`
+* `prometheus.cameronkollwitz.com`
 
-(and replace `example.com` with your actual domain).
+(and replace `cameronkollwitz.com` with your actual domain).
 
-**Note**: You can also use a subdomain, like `swarmprom.example.com`. Just make sure that the subdomains point to (at least one of) your cluster IPs. Or set up a wildcard subdomain (`*`).
+**Note**: You can also use a subdomain, like `swarmprom.cameronkollwitz.com`. Just make sure that the subdomains point to (at least one of) your cluster IPs. Or set up a wildcard subdomain (`*`).
 
 * If you are using Slack and want to integrate it, set the following environment variables:
 
@@ -124,18 +122,16 @@ export SLACK_USER=alertmanager
 
 * Deploy the Traefik version of the stack:
 
-
 ```bash
 docker stack deploy -c docker-compose.traefik.yml swarmprom
 ```
 
 To test it, go to each URL:
 
-* `https://grafana.example.com`
-* `https://alertmanager.example.com`
-* `https://unsee.example.com`
-* `https://prometheus.example.com`
-
+* `https://grafana.cameronkollwitz.com`
+* `https://alertmanager.cameronkollwitz.com`
+* `https://unsee.cameronkollwitz.com`
+* `https://prometheus.cameronkollwitz.com`
 
 ## Setup Grafana
 
@@ -154,7 +150,7 @@ After you login, click on the home drop down, in the left upper corner and you'l
 
 ***Docker Swarm Nodes Dashboard***
 
-![Nodes](https://raw.githubusercontent.com/stefanprodan/swarmprom/master/grafana/screens/swarmprom-nodes-dash-v3.png)
+![Nodes](https://raw.githubusercontent.com/cameronkollwitz/swarmprom/master/grafana/screens/swarmprom-nodes-dash-v3.png)
 
 URL: `http://<swarm-ip>:3000/dashboard/db/docker-swarm-nodes`
 
@@ -172,7 +168,7 @@ This dashboard shows key metrics for monitoring the resource usage of your Swarm
 
 ***Docker Swarm Services Dashboard***
 
-![Nodes](https://raw.githubusercontent.com/stefanprodan/swarmprom/master/grafana/screens/swarmprom-services-dash-v3.png)
+![Nodes](https://raw.githubusercontent.com/cameronkollwitz/swarmprom/master/grafana/screens/swarmprom-services-dash-v3.png)
 
 URL: `http://<swarm-ip>:3000/dashboard/db/docker-swarm-services`
 
@@ -190,7 +186,7 @@ This dashboard shows key metrics for monitoring the resource usage of your Swarm
 
 ***Prometheus Stats Dashboard***
 
-![Nodes](https://raw.githubusercontent.com/stefanprodan/swarmprom/master/grafana/screens/swarmprom-prometheus-dash-v3.png)
+![Nodes](https://raw.githubusercontent.com/cameronkollwitz/swarmprom/master/grafana/screens/swarmprom-prometheus-dash-v3.png)
 
 URL: `http://<swarm-ip>:3000/dashboard/db/prometheus`
 
@@ -200,7 +196,6 @@ URL: `http://<swarm-ip>:3000/dashboard/db/prometheus`
 * Chunks to persist and persistence urgency graphs
 * Chunks ops and checkpoint duration graphs
 * Target scrapes, rule evaluation duration, samples ingested rate and scrape duration graphs
-
 
 ## Prometheus service discovery
 
@@ -259,7 +254,7 @@ file that is mounted inside the node-exporter container.
 
 ```yaml
   node-exporter:
-    image: stefanprodan/swarmprom-node-exporter
+    image: cameronkollwitz/swarmprom-node-exporter
     environment:
       - NODE_ID={{.Node.ID}}
     volumes:
@@ -273,7 +268,7 @@ Now that you have a metric containing the Docker Swarm node ID and name, you can
 
 Let's say you want to find the available memory on each node, normally you would write something like this:
 
-```
+```bash
 sum(node_memory_MemAvailable) by (instance)
 
 {instance="10.0.0.5:9100"} 889450496
@@ -305,7 +300,7 @@ Let's write a query to find out how many containers are running on a Swarm node.
 Knowing from the `node_meta` metric all the nodes IDs you can define a filter with them in Grafana.
 Assuming the filter is `$node_id` the container count query should look like this:
 
-```
+```sql
 count(rate(container_last_seen{container_label_com_docker_swarm_node_id=~"$node_id"}[5m]))
 ```
 
@@ -314,7 +309,7 @@ Docker engine doesn't have a label with the node ID attached on every metric, bu
 metric that has this label.  If you want to find out the number of failed health checks on a Swarm node
 you would write a query like this:
 
-```
+```sql
 sum(engine_daemon_health_checks_failed_total) * on(instance) group_left(node_id) swarm_node_info{node_id=~"$node_id"})
 ```
 
@@ -324,12 +319,12 @@ the experimental feature and set the metrics address to `0.0.0.0:9323`.
 If you are running Docker with systemd create or edit
 /etc/systemd/system/docker.service.d/docker.conf file like so:
 
-```
+```yaml
 [Service]
 ExecStart=
 ExecStart=/usr/bin/dockerd \
   --storage-driver=overlay2 \
-  --dns 8.8.4.4 --dns 8.8.8.8 \
+  --dns 1.0.0.2 --dns 1.1.1.2 \
   --experimental=true \
   --metrics-addr 0.0.0.0:9323
 ```
@@ -345,7 +340,7 @@ Replace 172.18.0.1 with your docker_gwbridge address in the compose file:
 
 ```yaml
   dockerd-exporter:
-    image: stefanprodan/caddy
+    image: cameronkollwitz/caddy
     environment:
       - DOCKER_GWBRIDGE_IP=172.18.0.1
 ```
@@ -362,7 +357,7 @@ compose file or using the env variable `PROMETHEUS_RETENTION`.
 
 ```yaml
   prometheus:
-    image: stefanprodan/swarmprom-prometheus
+    image: cameronkollwitz/swarmprom-prometheus
     command:
       - '-storage.tsdb.retention=24h'
     deploy:
@@ -378,7 +373,7 @@ pin the Prometheus service on a specific host with placement constraints.
 
 ```yaml
   prometheus:
-    image: stefanprodan/swarmprom-prometheus
+    image: cameronkollwitz/swarmprom-prometheus
     volumes:
       - prometheus:/prometheus
     deploy:
@@ -397,7 +392,7 @@ The Prometheus swarmprom comes with the following alert rules:
 
 Alerts when a node CPU usage goes over 80% for five minutes.
 
-```
+```sql
 ALERT node_cpu_usage
   IF 100 - (avg(irate(node_cpu{mode="idle"}[1m])  * on(instance) group_left(node_name) node_meta * 100) by (node_name)) > 80
   FOR 5m
@@ -407,11 +402,12 @@ ALERT node_cpu_usage
       description = "Swarm node {{ $labels.node_name }} CPU usage is at {{ humanize $value}}%.",
   }
 ```
+
 ***Swarm Node Memory Alert***
 
 Alerts when a node memory usage goes over 80% for five minutes.
 
-```
+```sql
 ALERT node_memory_usage
   IF sum(((node_memory_MemTotal - node_memory_MemAvailable) / node_memory_MemTotal) * on(instance) group_left(node_name) node_meta * 100) by (node_name) > 80
   FOR 5m
@@ -421,11 +417,12 @@ ALERT node_memory_usage
       description = "Swarm node {{ $labels.node_name }} memory usage is at {{ humanize $value}}%.",
   }
 ```
+
 ***Swarm Node Disk Alert***
 
 Alerts when a node storage usage goes over 85% for five minutes.
 
-```
+```sql
 ALERT node_disk_usage
   IF ((node_filesystem_size{mountpoint="/rootfs"} - node_filesystem_free{mountpoint="/rootfs"}) * 100 / node_filesystem_size{mountpoint="/rootfs"}) * on(instance) group_left(node_name) node_meta > 85
   FOR 5m
@@ -440,7 +437,7 @@ ALERT node_disk_usage
 
 Alerts when a node storage is going to remain out of free space in six hours.
 
-```
+```sql
 ALERT node_disk_fill_rate_6h
   IF predict_linear(node_filesystem_free{mountpoint="/rootfs"}[1h], 6*3600) * on(instance) group_left(node_name) node_meta < 0
   FOR 1h
@@ -452,8 +449,8 @@ ALERT node_disk_fill_rate_6h
 ```
 
 You can add alerts to
-[swarm_node](https://github.com/stefanprodan/swarmprom/blob/master/prometheus/rules/swarm_node.rules)
-and [swarm_task](https://github.com/stefanprodan/swarmprom/blob/master/prometheus/rules/swarm_task.rules)
+[swarm_node](https://github.com/cameronkollwitz/swarmprom/blob/master/prometheus/rules/swarm_node.rules)
+and [swarm_task](https://github.com/cameronkollwitz/swarmprom/blob/master/prometheus/rules/swarm_task.rules)
 files and rerun stack deploy to update them. Because these files are mounted inside the Prometheus
 container at run time as [Docker configs](https://docs.docker.com/engine/swarm/configs/)
 you don't have to bundle them with the image.
@@ -464,7 +461,7 @@ username and channel via environment variables:
 
 ```yaml
   alertmanager:
-    image: stefanprodan/swarmprom-alertmanager
+    image: cameronkollwitz/swarmprom-alertmanager
     environment:
       - SLACK_URL=${SLACK_URL}
       - SLACK_CHANNEL=${SLACK_CHANNEL}
@@ -473,13 +470,13 @@ username and channel via environment variables:
 
 You can install the `stress` package with apt and test out the CPU alert, you should receive something like this:
 
-![Alerts](https://raw.githubusercontent.com/stefanprodan/swarmprom/master/grafana/screens/alertmanager-slack-v2.png)
+![Alerts](https://raw.githubusercontent.com/cameronkollwitz/swarmprom/master/grafana/screens/alertmanager-slack-v2.png)
 
 Cloudflare has made a great dashboard for managing alerts.
 Unsee can aggregate alerts from multiple Alertmanager instances, running either in HA mode or separate.
 You can access unsee at `http://<swarm-ip>:9094` using the admin user/password set via compose up:
 
-![Unsee](https://raw.githubusercontent.com/stefanprodan/swarmprom/master/grafana/screens/unsee.png)
+![Unsee](https://raw.githubusercontent.com/cameronkollwitz/swarmprom/master/grafana/screens/unsee.png)
 
 ## Monitoring applications and backend services
 
@@ -494,7 +491,7 @@ Prometheus config using the `JOBS` environment variable:
 
 ```yaml
   prometheus:
-    image: stefanprodan/swarmprom-prometheus
+    image: cameronkollwitz/swarmprom-prometheus
     environment:
       - JOBS=mongo-exporter:9216 kafka-exporter:9216 redis-exporter:9216
 ```
@@ -545,6 +542,6 @@ monitor, and control your microservices based application.
 You can view metrics, tags and metadata of the running processes, containers and hosts.
 Scope offers remote access to the Swarm’s nods and containers, making it easy to diagnose issues in real-time.
 
-![Scope](https://raw.githubusercontent.com/stefanprodan/swarmprom/master/grafana/screens/weave-scope.png)
+![Scope](https://raw.githubusercontent.com/cameronkollwitz/swarmprom/master/grafana/screens/weave-scope.png)
 
-![Scope Hosts](https://raw.githubusercontent.com/stefanprodan/swarmprom/master/grafana/screens/weave-scope-hosts-v2.png)
+![Scope Hosts](https://raw.githubusercontent.com/cameronkollwitz/swarmprom/master/grafana/screens/weave-scope-hosts-v2.png)
