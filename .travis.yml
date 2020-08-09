@@ -21,12 +21,12 @@ after_success:
       echo "PR build, skipping Docker Hub push";
     else
     docker login -u "$DOCKER_USER" -p "$DOCKER_PASS";
-    docker tag cameronkollwitz/swarmprom-prometheus:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-prometheus:v2.5.0;
-    docker push cameronkollwitz/swarmprom-prometheus:v2.5.0;
-    docker tag cameronkollwitz/swarmprom-node-exporter:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-node-exporter:v0.16.0;
-    docker push cameronkollwitz/swarmprom-node-exporter:v0.16.0;
-    docker tag cameronkollwitz/swarmprom-alertmanager:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-alertmanager:v0.15.3;
-    docker push cameronkollwitz/swarmprom-alertmanager:v0.15.3;
-    docker tag cameronkollwitz/swarmprom-grafana:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-grafana:5.3.4;
-    docker push cameronkollwitz/swarmprom-grafana:5.3.4;
+    docker tag cameronkollwitz/swarmprom-prometheus:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-prometheus:v2.20.1;
+    docker push cameronkollwitz/swarmprom-prometheus:v2.20.1;
+    docker tag cameronkollwitz/swarmprom-node-exporter:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-node-exporter:v1.0.1;
+    docker push cameronkollwitz/swarmprom-node-exporter:v1.0.1;
+    docker tag cameronkollwitz/swarmprom-alertmanager:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-alertmanager:v0.21.0;
+    docker push cameronkollwitz/swarmprom-alertmanager:v0.21.0;
+    docker tag cameronkollwitz/swarmprom-grafana:$TRAVIS_BUILD_NUMBER cameronkollwitz/swarmprom-grafana:7.1.3;
+    docker push cameronkollwitz/swarmprom-grafana:7.1.3;
     fi

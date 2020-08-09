@@ -1,4 +1,4 @@
-version: "3.3"
+version: "3.7"
 
 networks:
   net:
@@ -22,7 +22,7 @@ configs:
 
 services:
   dockerd-exporter:
-    image: stefanprodan/caddy
+    image: cameronkollwitz/caddy
     networks:
       - net
     environment:
@@ -58,7 +58,7 @@ services:
           memory: 64M
 
   grafana:
-    image: stefanprodan/swarmprom-grafana:5.3.4
+    image: cameronkollwitz/swarmprom-grafana:5.3.4
     networks:
       - default
       - net
@@ -101,7 +101,7 @@ services:
         - traefik.http.services.swarmprom-grafana.loadbalancer.server.port=3000
 
   alertmanager:
-    image: stefanprodan/swarmprom-alertmanager:v0.14.0
+    image: cameronkollwitz/swarmprom-alertmanager:v0.14.0
     networks:
       - default
       - net
@@ -168,7 +168,7 @@ services:
         - traefik.http.routers.swarmprom-unsee-https.middlewares=swarmprom-unsee-auth
 
   node-exporter:
-    image: stefanprodan/swarmprom-node-exporter:v0.16.0
+    image: cameronkollwitz/swarmprom-node-exporter:v0.16.0
     networks:
       - net
     environment:
@@ -193,7 +193,7 @@ services:
           memory: 64M
 
   prometheus:
-    image: stefanprodan/swarmprom-prometheus:v2.5.0
+    image: cameronkollwitz/swarmprom-prometheus:v2.5.0
     networks:
       - default
       - net
