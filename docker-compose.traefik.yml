@@ -1,7 +1,7 @@
 version: "3.7"
 
 networks:
-  net:
+  internal:
     driver: overlay
     attachable: true
   traefik-public:
@@ -24,9 +24,9 @@ services:
   dockerd-exporter:
     image: cameronkollwitz/caddy
     networks:
-      - net
+      internal:
     environment:
-      - DOCKER_GWBRIDGE_IP=172.18.0.1
+      DOCKER_GWBRIDGE_IP: 172.18.0.1
     configs:
       - source: dockerd_config
         target: /etc/caddy/Caddyfile
@@ -41,7 +41,7 @@ services:
   cadvisor:
     image: google/cadvisor
     networks:
-      - net
+      internal:
     command: -logtostderr -docker_only
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -58,22 +58,22 @@ services:
           memory: 64M
 
   grafana:
-    image: cameronkollwitz/swarmprom-grafana:5.3.4
+    image: cameronkollwitz/swarmprom-grafana:7.1.3
     networks:
-      - default
-      - net
-      - traefik-public
+      default:
+      internal:
+      traefik-public:
     environment:
-      - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      #- GF_SERVER_ROOT_URL=${GF_SERVER_ROOT_URL:-localhost}
-      #- GF_SMTP_ENABLED=${GF_SMTP_ENABLED:-false}
-      #- GF_SMTP_FROM_ADDRESS=${GF_SMTP_FROM_ADDRESS:-grafana@test.com}
-      #- GF_SMTP_FROM_NAME=${GF_SMTP_FROM_NAME:-Grafana}
-      #- GF_SMTP_HOST=${GF_SMTP_HOST:-smtp:25}
-      #- GF_SMTP_USER=${GF_SMTP_USER}
-      #- GF_SMTP_PASSWORD=${GF_SMTP_PASSWORD}
+      GF_SECURITY_ADMIN_USER: ${ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: false
+      #-GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL:-localhost}
+      #-GF_SMTP_ENABLED: ${GF_SMTP_ENABLED:-false}
+      #-GF_SMTP_FROM_ADDRESS: ${GF_SMTP_FROM_ADDRESS:-grafana@test.com}
+      #-GF_SMTP_FROM_NAME: ${GF_SMTP_FROM_NAME:-Grafana}
+      #-GF_SMTP_HOST: ${GF_SMTP_HOST:-smtp:25}
+      #-GF_SMTP_USER: ${GF_SMTP_USER}
+      #-GF_SMTP_PASSWORD: ${GF_SMTP_PASSWORD}
     volumes:
       - grafana:/var/lib/grafana
     deploy:
@@ -88,28 +88,28 @@ services:
         reservations:
           memory: 64M
       labels:
-        - traefik.enable=true
-        - traefik.docker.network=traefik-public
-        - traefik.constraint-label=traefik-public
-        - traefik.http.routers.swarmprom-grafana-http.rule=Host(`grafana.${DOMAIN?Variable DOMAIN not set}`)
-        - traefik.http.routers.swarmprom-grafana-http.entrypoints=http
-        - traefik.http.routers.swarmprom-grafana-http.middlewares=https-redirect
-        - traefik.http.routers.swarmprom-grafana-https.rule=Host(`grafana.${DOMAIN?Variable DOMAIN not set}`)
-        - traefik.http.routers.swarmprom-grafana-https.entrypoints=https
-        - traefik.http.routers.swarmprom-grafana-https.tls=true
-        - traefik.http.routers.swarmprom-grafana-https.tls.certresolver=le
-        - traefik.http.services.swarmprom-grafana.loadbalancer.server.port=3000
+        traefik.enable=: true
+        traefik.docker.network: traefik-public
+        traefik.constraint-label: traefik-public
+        traefik.http.routers.swarmprom-grafana-http.rule: Host(`grafana.${DOMAIN?Variable DOMAIN not set}`)
+        traefik.http.routers.swarmprom-grafana-http.entrypoints: http
+        traefik.http.routers.swarmprom-grafana-http.middlewares: https-redirect
+        traefik.http.routers.swarmprom-grafana-https.rule: Host(`grafana.${DOMAIN?Variable DOMAIN not set}`)
+        traefik.http.routers.swarmprom-grafana-https.entrypoints: https
+        traefik.http.routers.swarmprom-grafana-https.tls: true
+        traefik.http.routers.swarmprom-grafana-https.tls.certresolver: le
+        traefik.http.services.swarmprom-grafana.loadbalancer.server.port: 3000
 
   alertmanager:
-    image: cameronkollwitz/swarmprom-alertmanager:v0.14.0
+    image: cameronkollwitz/swarmprom-alertmanager:v0.21.0
     networks:
-      - default
-      - net
-      - traefik-public
+      default:
+      internal:
+      traefik-public:
     environment:
-      - SLACK_URL=${SLACK_URL:-https://hooks.slack.com/services/TOKEN}
-      - SLACK_CHANNEL=${SLACK_CHANNEL:-general}
-      - SLACK_USER=${SLACK_USER:-alertmanager}
+      SLACK_URL: ${SLACK_URL:-https://hooks.slack.com/services/TOKEN}
+      SLACK_CHANNEL: ${SLACK_CHANNEL:-general}
+      SLACK_USER: ${SLACK_USER:-alertmanager}
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
@@ -127,52 +127,52 @@ services:
         reservations:
           memory: 64M
       labels:
-        - traefik.enable=true
-        - traefik.docker.network=traefik-public
-        - traefik.constraint-label=traefik-public
-        - traefik.http.routers.swarmprom-alertmanager-http.rule=Host(`alertmanager.${DOMAIN?Variable DOMAIN not set}`)
-        - traefik.http.routers.swarmprom-alertmanager-http.entrypoints=http
-        - traefik.http.routers.swarmprom-alertmanager-http.middlewares=https-redirect
-        - traefik.http.routers.swarmprom-alertmanager-https.rule=Host(`alertmanager.${DOMAIN?Variable DOMAIN not set}`)
-        - traefik.http.routers.swarmprom-alertmanager-https.entrypoints=https
-        - traefik.http.routers.swarmprom-alertmanager-https.tls=true
-        - traefik.http.routers.swarmprom-alertmanager-https.tls.certresolver=le
-        - traefik.http.services.swarmprom-alertmanager.loadbalancer.server.port=9093
-        - traefik.http.middlewares.swarmprom-alertmanager-auth.basicauth.users=${ADMIN_USER?Variable ADMIN_USER not set}:${HASHED_PASSWORD?Variable HASHED_PASSWORD not set}
-        - traefik.http.routers.swarmprom-alertmanager-https.middlewares=swarmprom-alertmanager-auth
+        traefik.enable: true
+        traefik.docker.network: traefik-public
+        traefik.constraint-label: traefik-public
+        traefik.http.routers.swarmprom-alertmanager-http.rule: Host(`alertmanager.${DOMAIN?Variable DOMAIN not set}`)
+        traefik.http.routers.swarmprom-alertmanager-http.entrypoints: http
+        traefik.http.routers.swarmprom-alertmanager-http.middlewares: https-redirect
+        traefik.http.routers.swarmprom-alertmanager-https.rule: Host(`alertmanager.${DOMAIN?Variable DOMAIN not set}`)
+        traefik.http.routers.swarmprom-alertmanager-https.entrypoints: https
+        traefik.http.routers.swarmprom-alertmanager-https.tls: true
+        traefik.http.routers.swarmprom-alertmanager-https.tls.certresolver: le
+        traefik.http.services.swarmprom-alertmanager.loadbalancer.server.port: 9093
+        traefik.http.middlewares.swarmprom-alertmanager-auth.basicauth.users: ${ADMIN_USER?Variable ADMIN_USER not set}:${HASHED_PASSWORD?Variable HASHED_PASSWORD not set}
+        traefik.http.routers.swarmprom-alertmanager-https.middlewares: swarmprom-alertmanager-auth
 
   unsee:
-    image: cloudflare/unsee:v0.8.0
+    image: cloudflare/unsee:v0.9.2
     networks:
-      - default
-      - net
-      - traefik-public
+      default:
+      internal:
+      traefik-public:
     environment:
       - "ALERTMANAGER_URIS=default:http://alertmanager:9093"
     deploy:
       mode: replicated
       replicas: 1
       labels:
-        - traefik.enable=true
-        - traefik.docker.network=traefik-public
-        - traefik.constraint-label=traefik-public
-        - traefik.http.routers.swarmprom-unsee-http.rule=Host(`unsee.${DOMAIN?Variable DOMAIN not set}`)
-        - traefik.http.routers.swarmprom-unsee-http.entrypoints=http
-        - traefik.http.routers.swarmprom-unsee-http.middlewares=https-redirect
-        - traefik.http.routers.swarmprom-unsee-https.rule=Host(`unsee.${DOMAIN?Variable DOMAIN not set}`)
-        - traefik.http.routers.swarmprom-unsee-https.entrypoints=https
-        - traefik.http.routers.swarmprom-unsee-https.tls=true
-        - traefik.http.routers.swarmprom-unsee-https.tls.certresolver=le
-        - traefik.http.services.swarmprom-unsee.loadbalancer.server.port=8080
-        - traefik.http.middlewares.swarmprom-unsee-auth.basicauth.users=${ADMIN_USER?Variable ADMIN_USER not set}:${HASHED_PASSWORD?Variable HASHED_PASSWORD not set}
-        - traefik.http.routers.swarmprom-unsee-https.middlewares=swarmprom-unsee-auth
+        traefik.enable: true
+        traefik.docker.network: traefik-public
+        traefik.constraint-label: traefik-public
+        traefik.http.routers.swarmprom-unsee-http.rule: Host(`unsee.${DOMAIN?Variable DOMAIN not set}`)
+        traefik.http.routers.swarmprom-unsee-http.entrypoints: http
+        traefik.http.routers.swarmprom-unsee-http.middlewares: https-redirect
+        traefik.http.routers.swarmprom-unsee-https.rule: Host(`unsee.${DOMAIN?Variable DOMAIN not set}`)
+        traefik.http.routers.swarmprom-unsee-https.entrypoints: https
+        traefik.http.routers.swarmprom-unsee-https.tls: true
+        traefik.http.routers.swarmprom-unsee-https.tls.certresolver: le
+        traefik.http.services.swarmprom-unsee.loadbalancer.server.port: 8080
+        traefik.http.middlewares.swarmprom-unsee-auth.basicauth.users: ${ADMIN_USER?Variable ADMIN_USER not set}:${HASHED_PASSWORD?Variable HASHED_PASSWORD not set}
+        traefik.http.routers.swarmprom-unsee-https.middlewares: swarmprom-unsee-auth
 
   node-exporter:
-    image: cameronkollwitz/swarmprom-node-exporter:v0.16.0
+    image: cameronkollwitz/swarmprom-node-exporter:v1.0.1
     networks:
-      - net
+      internal:
     environment:
-      - NODE_ID={{.Node.ID}}
+      NODE_ID: {{.Node.ID}}
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -193,17 +193,19 @@ services:
           memory: 64M
 
   prometheus:
-    image: cameronkollwitz/swarmprom-prometheus:v2.5.0
+    image: cameronkollwitz/swarmprom-prometheus:v2.20.1
     networks:
-      - default
-      - net
-      - traefik-public
+      default:
+      internal:
+      traefik-public:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention=${PROMETHEUS_RETENTION:-24h}'
     volumes:
-      - prometheus:/prometheus
+      - type: volume
+        source: prometheus
+        target: /prometheus
     configs:
       - source: node_rules
         target: /etc/prometheus/swarm_node.rules.yml
@@ -221,16 +223,16 @@ services:
         reservations:
           memory: 128M
       labels:
-        - traefik.enable=true
-        - traefik.docker.network=traefik-public
-        - traefik.constraint-label=traefik-public
-        - traefik.http.routers.swarmprom-prometheus-http.rule=Host(`prometheus.${DOMAIN?Variable DOMAIN not set}`)
-        - traefik.http.routers.swarmprom-prometheus-http.entrypoints=http
-        - traefik.http.routers.swarmprom-prometheus-http.middlewares=https-redirect
-        - traefik.http.routers.swarmprom-prometheus-https.rule=Host(`prometheus.${DOMAIN?Variable DOMAIN not set}`)
-        - traefik.http.routers.swarmprom-prometheus-https.entrypoints=https
-        - traefik.http.routers.swarmprom-prometheus-https.tls=true
-        - traefik.http.routers.swarmprom-prometheus-https.tls.certresolver=le
-        - traefik.http.services.swarmprom-prometheus.loadbalancer.server.port=9090
-        - traefik.http.middlewares.swarmprom-prometheus-auth.basicauth.users=${ADMIN_USER?Variable ADMIN_USER not set}:${HASHED_PASSWORD?Variable HASHED_PASSWORD not set}
-        - traefik.http.routers.swarmprom-prometheus-https.middlewares=swarmprom-prometheus-auth
+        traefik.enable: true
+        traefik.docker.network: traefik-public
+        traefik.constraint-label: traefik-public
+        traefik.http.routers.swarmprom-prometheus-http.rule: Host(`prometheus.${DOMAIN?Variable DOMAIN not set}`)
+        traefik.http.routers.swarmprom-prometheus-http.entrypoints: http
+        traefik.http.routers.swarmprom-prometheus-http.middlewares: https-redirect
+        traefik.http.routers.swarmprom-prometheus-https.rule: Host(`prometheus.${DOMAIN?Variable DOMAIN not set}`)
+        traefik.http.routers.swarmprom-prometheus-https.entrypoints: https
+        traefik.http.routers.swarmprom-prometheus-https.tls: true
+        traefik.http.routers.swarmprom-prometheus-https.tls.certresolver: le
+        traefik.http.services.swarmprom-prometheus.loadbalancer.server.port: 9090
+        traefik.http.middlewares.swarmprom-prometheus-auth.basicauth.users: ${ADMIN_USER?Variable ADMIN_USER not set}:${HASHED_PASSWORD?Variable HASHED_PASSWORD not set}
+        traefik.http.routers.swarmprom-prometheus-https.middlewares: swarmprom-prometheus-auth
