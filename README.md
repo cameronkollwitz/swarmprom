@@ -1,5 +1,7 @@
 # Swarmprom Docker Service Stack
 
+[![Build Status](https://travis-ci.org/cameronkollwitz/swarmprom.svg?branch=master)](https://travis-ci.org/cameronkollwitz/swarmprom)
+
 **NOTE:** Might be a few bugs in the system still... (2020-08-14)
 
 Swarmprom is a starter kit for Docker Swarm monitoring with [Prometheus](https://prometheus.io/),
