@@ -1,4 +1,6 @@
-# swarmprom
+# Swarmprom Docker Service Stack
+
+**NOTE:** Might be a few bugs in the system still... (2020-08-14)
 
 Swarmprom is a starter kit for Docker Swarm monitoring with [Prometheus](https://prometheus.io/),
 [Grafana](http://grafana.org/),
@@ -11,9 +13,9 @@ and [Unsee](https://github.com/cloudflare/unsee).
 
 Clone this repository and run the monitoring stack:
 
-```bash
-$ git clone https://github.com/cameronkollwitz/swarmprom.git
-$ cd swarmprom
+```Bash
+git clone https://github.com/cameronkollwitz/swarmprom.git
+cd swarmprom
 
 ADMIN_USER=admin \
 ADMIN_PASSWORD=admin \
@@ -28,6 +30,7 @@ Prerequisites:
 * Docker 19.03
 * Docker Swarm cluster with at least one manager and worker node
 * Docker Engine experimental features enabled and metrics address set to `0.0.0.0:9323`
+  * There is an example `daemon.json` in the `/etc/docker` directory in this repository!
 
 Services:
 
@@ -58,44 +61,44 @@ These instructions assume you already have Traefik set up following that guide a
 
 * Clone this repository and enter into the directory:
 
-```bash
+```Bash
 git clone https://github.com/cameronkollwitz/swarmprom.git
 cd swarmprom
 ```
 
 * Set and export an `ADMIN_USER` environment variable:
 
-```bash
+```Bash
 export ADMIN_USER=admin
 ```
 
 * Set and export an `ADMIN_PASSWORD` environment variable:
 
-```bash
+```Bash
 export ADMIN_PASSWORD=changethis
 ```
 
 * Set and export a hashed version of the `ADMIN_PASSWORD` using `openssl`, it will be used by Traefik's HTTP Basic Auth for most of the services:
 
-```bash
+```Bash
 export HASHED_PASSWORD=$(openssl passwd -apr1 $ADMIN_PASSWORD)
 ```
 
 * You can check the contents with:
 
-```bash
+```Bash
 echo $HASHED_PASSWORD
 ```
 
 it will look like:
 
-```bash
+```Bash
 $apr1$89eqM5Ro$CxaFELthUKV21DpI3UTQO.
 ```
 
 * Create and export an environment variable `DOMAIN`, e.g.:
 
-```bash
+```Bash
 export DOMAIN=cameronkollwitz.com
 ```
 
@@ -112,7 +115,7 @@ and make sure that the following sub-domains point to your Docker Swarm cluster 
 
 * If you are using Slack and want to integrate it, set the following environment variables:
 
-```bash
+```Bash
 export SLACK_URL=https://hooks.slack.com/services/TOKEN
 export SLACK_CHANNEL=devops-alerts
 export SLACK_USER=alertmanager
@@ -122,7 +125,7 @@ export SLACK_USER=alertmanager
 
 * Deploy the Traefik version of the stack:
 
-```bash
+```Bash
 docker stack deploy -c docker-compose.traefik.yml swarmprom
 ```
 
@@ -197,7 +200,7 @@ URL: `http://<swarm-ip>:3000/dashboard/db/prometheus`
 * Chunks ops and checkpoint duration graphs
 * Target scrapes, rule evaluation duration, samples ingested rate and scrape duration graphs
 
-## Prometheus service discovery
+## Prometheus Service Discovery
 
 In order to collect metrics from Swarm nodes you need to deploy the exporters on each server.
 Using global services you don't have to manually deploy the exporters. When you scale up your
@@ -207,7 +210,7 @@ All you need is an automated way for Prometheus to reach these instances.
 Running Prometheus on the same overlay network as the exporter services allows you to use the DNS service
 discovery. Using the exporters service name, you can configure DNS discovery:
 
-```yaml
+```YAML
 scrape_configs:
   - job_name: 'node-exporter'
     dns_sd_configs:
@@ -245,14 +248,14 @@ the node-exporter containing the hostname and the Docker Swarm node ID.
 
 When a node-exporter container starts `node-meta.prom` is generated with the following content:
 
-```bash
+```Bash
 "node_meta{node_id=\"$NODE_ID\", node_name=\"$NODE_NAME\"} 1"
 ```
 
 The node ID value is supplied via `{{.Node.ID}}` and the node name is extracted from the `/etc/hostname`
 file that is mounted inside the node-exporter container.
 
-```yaml
+```YAML
   node-exporter:
     image: cameronkollwitz/swarmprom-node-exporter
     environment:
@@ -268,7 +271,7 @@ Now that you have a metric containing the Docker Swarm node ID and name, you can
 
 Let's say you want to find the available memory on each node, normally you would write something like this:
 
-```bash
+```Bash
 sum(node_memory_MemAvailable) by (instance)
 
 {instance="10.0.0.5:9100"} 889450496
@@ -279,7 +282,7 @@ sum(node_memory_MemAvailable) by (instance)
 The above result is not very helpful since you can't tell what Swarm node is behind the instance IP.
 So let's write that query taking into account the node_meta metric:
 
-```sql
+```SQL
 sum(node_memory_MemAvailable * on(instance) group_left(node_id, node_name) node_meta) by (node_id, node_name)
 
 {node_id="wrdvtftteo0uaekmdq4dxrn14",node_name="swarm-manager-1"} 889450496
@@ -300,7 +303,7 @@ Let's write a query to find out how many containers are running on a Swarm node.
 Knowing from the `node_meta` metric all the nodes IDs you can define a filter with them in Grafana.
 Assuming the filter is `$node_id` the container count query should look like this:
 
-```sql
+```SQL
 count(rate(container_last_seen{container_label_com_docker_swarm_node_id=~"$node_id"}[5m]))
 ```
 
@@ -309,7 +312,7 @@ Docker engine doesn't have a label with the node ID attached on every metric, bu
 metric that has this label.  If you want to find out the number of failed health checks on a Swarm node
 you would write a query like this:
 
-```sql
+```SQL
 sum(engine_daemon_health_checks_failed_total) * on(instance) group_left(node_id) swarm_node_info{node_id=~"$node_id"})
 ```
 
@@ -319,7 +322,7 @@ the experimental feature and set the metrics address to `0.0.0.0:9323`.
 If you are running Docker with systemd create or edit
 /etc/systemd/system/docker.service.d/docker.conf file like so:
 
-```yaml
+```YAML
 [Service]
 ExecStart=
 ExecStart=/usr/bin/dockerd \
@@ -332,13 +335,13 @@ ExecStart=/usr/bin/dockerd \
 Apply the config changes with `systemctl daemon-reload && systemctl restart docker` and
 check if the docker_gwbridge ip address is 172.18.0.1:
 
-```bash
+```Bash
 ip -o addr show docker_gwbridge
 ```
 
 Replace 172.18.0.1 with your docker_gwbridge address in the compose file:
 
-```yaml
+```YAML
   dockerd-exporter:
     image: cameronkollwitz/caddy
     environment:
@@ -355,7 +358,7 @@ metrics will expose container metrics replacing cAdvisor all together.
 I've set the Prometheus retention period to 24h, you can change these values in the
 compose file or using the env variable `PROMETHEUS_RETENTION`.
 
-```yaml
+```YAML
   prometheus:
     image: cameronkollwitz/swarmprom-prometheus
     command:
@@ -371,7 +374,7 @@ compose file or using the env variable `PROMETHEUS_RETENTION`.
 When using host volumes you should ensure that Prometheus doesn't get scheduled on different nodes. You can
 pin the Prometheus service on a specific host with placement constraints.
 
-```yaml
+```YAML
   prometheus:
     image: cameronkollwitz/swarmprom-prometheus
     volumes:
@@ -392,7 +395,7 @@ The Prometheus swarmprom comes with the following alert rules:
 
 Alerts when a node CPU usage goes over 80% for five minutes.
 
-```sql
+```SQL
 ALERT node_cpu_usage
   IF 100 - (avg(irate(node_cpu{mode="idle"}[1m])  * on(instance) group_left(node_name) node_meta * 100) by (node_name)) > 80
   FOR 5m
@@ -407,7 +410,7 @@ ALERT node_cpu_usage
 
 Alerts when a node memory usage goes over 80% for five minutes.
 
-```sql
+```SQL
 ALERT node_memory_usage
   IF sum(((node_memory_MemTotal - node_memory_MemAvailable) / node_memory_MemTotal) * on(instance) group_left(node_name) node_meta * 100) by (node_name) > 80
   FOR 5m
@@ -422,7 +425,7 @@ ALERT node_memory_usage
 
 Alerts when a node storage usage goes over 85% for five minutes.
 
-```sql
+```SQL
 ALERT node_disk_usage
   IF ((node_filesystem_size{mountpoint="/rootfs"} - node_filesystem_free{mountpoint="/rootfs"}) * 100 / node_filesystem_size{mountpoint="/rootfs"}) * on(instance) group_left(node_name) node_meta > 85
   FOR 5m
@@ -437,7 +440,7 @@ ALERT node_disk_usage
 
 Alerts when a node storage is going to remain out of free space in six hours.
 
-```sql
+```SQL
 ALERT node_disk_fill_rate_6h
   IF predict_linear(node_filesystem_free{mountpoint="/rootfs"}[1h], 6*3600) * on(instance) group_left(node_name) node_meta < 0
   FOR 1h
@@ -459,7 +462,7 @@ The Alertmanager swarmprom image is configured with the Slack receiver.
 In order to receive alerts on Slack you have to provide the Slack API url,
 username and channel via environment variables:
 
-```yaml
+```YAML
   alertmanager:
     image: cameronkollwitz/swarmprom-alertmanager
     environment:
@@ -478,7 +481,7 @@ You can access unsee at `http://<swarm-ip>:9094` using the admin user/password s
 
 ![Unsee](https://raw.githubusercontent.com/cameronkollwitz/swarmprom/master/grafana/screens/unsee.png)
 
-## Monitoring applications and backend services
+## Monitoring Applications and Backend Services
 
 You can extend swarmprom with special-purpose exporters for services like MongoDB, PostgreSQL, Kafka,
 Redis and also instrument your own applications using the Prometheus client libraries.
@@ -489,14 +492,14 @@ can reach them. Or you can attach the `mon_prometheus` service to the networks w
 Once your services are reachable by Prometheus you can add the dns name and port of those services to the
 Prometheus config using the `JOBS` environment variable:
 
-```yaml
+```YAML
   prometheus:
     image: cameronkollwitz/swarmprom-prometheus
     environment:
       - JOBS=mongo-exporter:9216 kafka-exporter:9216 redis-exporter:9216
 ```
 
-## Monitoring production systems
+## Monitoring Production Systems
 
 The swarmprom project is meant as a starting point in developing your own monitoring solution. Before running this
 in production you should consider building and publishing your own Prometheus, node exporter and alert manager
@@ -516,7 +519,7 @@ is good practice that will allow you to react quickly and efficiently when a maj
 Swarmprom comes with built-in [Weave Cloud](https://www.weave.works/product/cloud/) integration,
 what you need to do is run the weave-compose stack with your Weave service token:
 
-```bash
+```Bash
 TOKEN=<WEAVE-TOKEN> \
 ADMIN_USER=admin \
 ADMIN_PASSWORD=admin \
